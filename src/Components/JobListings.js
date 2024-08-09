@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavbarStudent from './NavbarStudent';
 import './JobListings.css';
-import NavbarStudent from './NavbarStudent';
+
 
 const JobListings = ({ apiUrl }) => {
   const [jobs, setJobs] = useState([]);

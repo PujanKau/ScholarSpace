@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from './UserContext';
-import { getInitials } from '../utils/getInitials';
+import { getInitials } from '../utils/getInitials'; // Import the utility function
 import './Navbar.css';
 
 const NavbarStudent = () => {
@@ -21,14 +21,16 @@ const NavbarStudent = () => {
       <div className="navbar-links">
         <Link to="/student/dashboard">Dashboard</Link>
         <Link to="/jobs">Jobs</Link>
-        
         <Link to="/employers">Employers</Link>
         <Link to="/courses">Courses</Link>
       </div>
       <div className="navbar-profile">
         {user.userId ? (
           <>
-            <div className="profile-initials">{getInitials(user.fullName)}</div>
+            <Link to={`/profile/${user.userId}`} className="profile-initials">
+              {getInitials(user.fullName)}
+
+            </Link>
             <button className="logout-button" onClick={handleLogout}>Logout</button>
           </>
         ) : (

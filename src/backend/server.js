@@ -87,15 +87,116 @@ app.post('/signup', (req, res) => {
     });
 });
 
+app.post('/profile/:userId', (req, res) => {
+    const { userId } = req.params;
+    const {
+        fullName, personalStatement, skills, education, experience, resume
+    } = req.body;
+
+    console.log('Data received on server:', req.body); // Log the incoming data
+
+    const skillsString = skills.join(', ');
+
+    const updateProfileQuery = `
+        UPDATE students 
+        SET fullName = ?, personalStatement = ?, skills = ?, education = ?, experience = ?, resume = ?
+        WHERE user_id = ?
+    `;
+
+    db.execute(updateProfileQuery, [fullName, personalStatement, skillsString, education, experience, resume, userId], (err, results) => {
+        if (err) {
+            console.error('Error updating profile:', err.stack);
+            return res.status(500).send('Error updating profile.');
+        }
+        console.log('Update query results:', results); 
+        res.json({ message: 'Profile updated successfully!' });
+    });
+});
+
+
+
+app.post('/courses-taken', (req, res) => {
+    const { userId, courseName } = req.body;
+
+    const insertCourseQuery = `
+        INSERT INTO courses_taken (user_id, courseName)
+        VALUES (?, ?)
+    `;
+
+    db.execute(insertCourseQuery, [userId, courseName], (err, results) => {
+        if (err) {
+            console.error('Error adding course:', err.stack);
+            res.status(500).send('Error adding course.');
+            return;
+        }
+        res.json({ message: 'Course added successfully!' });
+    });
+});
+
+app.post('/jobs-applied', (req, res) => {
+    const { userId, jobId, companyName, jobTitle } = req.body;
+
+    const insertJobQuery = `
+        INSERT INTO jobs_applied (user_id, jobTitle, companyName)
+        VALUES (?, ?, ?)
+    `;
+
+    db.execute(insertJobQuery, [userId, jobTitle, companyName], (err, results) => {
+        if (err) {
+            console.error('Error adding job application:', err.stack);
+            res.status(500).send('Error adding job application.');
+            return;
+        }
+        res.json({ message: 'Job application recorded successfully!' });
+    });
+});
+
+
 app.post('/post-job', (req, res) => {
-    const { jobTitle, numPeople, jobLocation, streetAddress, companyDescription, competitionId, internalClosingDate, externalClosingDate, payLevel, employmentType, travelFrequency, jobCategory, companyName, contactInformation, userId } = req.body;
+    const {
+        jobTitle,
+        numPeople,
+        jobLocation,
+        streetAddress,
+        jobDescription,
+        competitionId,
+        internalClosingDate,
+        externalClosingDate,
+        payLevel,
+        employmentType,
+        travelFrequency,
+        jobCategory,
+        companyName,
+        contactInformation,
+        userId
+    } = req.body;
+
+    // Format the dates before storing them
+    const formattedInternalClosingDate = new Date(internalClosingDate).toLocaleDateString('en-CA');
+    const formattedExternalClosingDate = new Date(externalClosingDate).toLocaleDateString('en-CA');
 
     const query = `
-        INSERT INTO jobs (jobTitle, numPeople, jobLocation, streetAddress, companyDescription, competitionId, internalClosingDate, externalClosingDate, payLevel, employmentType, travelFrequency, jobCategory, companyName, contactInformation, user_id) 
+        INSERT INTO jobs (jobTitle, numPeople, jobLocation, streetAddress, jobDescription, competitionId, internalClosingDate, externalClosingDate, payLevel, employmentType, travelFrequency, jobCategory, companyName, contactInformation, user_id) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.execute(query, [jobTitle, numPeople, jobLocation, streetAddress, companyDescription, competitionId, internalClosingDate, externalClosingDate, payLevel, employmentType, travelFrequency, jobCategory, companyName, contactInformation, userId], (err, results) => {
+    db.execute(query, [
+        jobTitle,
+        numPeople,
+        jobLocation,
+        streetAddress,
+        jobDescription,
+        competitionId,
+        formattedInternalClosingDate, // Use formatted date
+        formattedExternalClosingDate, // Use formatted date
+        payLevel,
+        employmentType,
+        travelFrequency,
+        jobCategory,
+        companyName,
+        contactInformation,
+        userId
+    ], (err, results) => {
         if (err) {
             console.error('Error inserting job data:', err.stack);
             return res.status(500).json({ message: 'Error posting job.' });
@@ -108,22 +209,28 @@ app.post('/post-job', (req, res) => {
                 console.error('Error fetching job data:', err.stack);
                 return res.status(500).json({ message: 'Error fetching job data.' });
             }
-            res.json({ message: 'Job posted successfully!', job: jobResults[0] });
+
+            // Format the dates again before sending them to the client
+            const job = jobResults[0];
+            job.internalClosingDate = new Date(job.internalClosingDate).toLocaleDateString('en-CA');
+            job.externalClosingDate = new Date(job.externalClosingDate).toLocaleDateString('en-CA');
+
+            res.json({ message: 'Job posted successfully!', job: job });
         });
     });
 });
 
 app.put('/jobs/:jobId', (req, res) => {
     const { jobId } = req.params;
-    const { jobTitle, numPeople, jobLocation, streetAddress, companyDescription, competitionId, internalClosingDate, externalClosingDate, payLevel, employmentType, travelFrequency, jobCategory, companyName, contactInformation } = req.body;
+    const { jobTitle, numPeople, jobLocation, streetAddress, jobDescription, competitionId, internalClosingDate, externalClosingDate, payLevel, employmentType, travelFrequency, jobCategory, companyName, contactInformation } = req.body;
 
     const query = `
         UPDATE jobs 
-        SET jobTitle = ?, numPeople = ?, jobLocation = ?, streetAddress = ?, companyDescription = ?, competitionId = ?, internalClosingDate = ?, externalClosingDate = ?, payLevel = ?, employmentType = ?, travelFrequency = ?, jobCategory = ?, companyName = ?, contactInformation = ? 
+        SET jobTitle = ?, numPeople = ?, jobLocation = ?, streetAddress = ?, jobDescription = ?, competitionId = ?, internalClosingDate = ?, externalClosingDate = ?, payLevel = ?, employmentType = ?, travelFrequency = ?, jobCategory = ?, companyName = ?, contactInformation = ? 
         WHERE id = ?
     `;
 
-    db.execute(query, [jobTitle, numPeople, jobLocation, streetAddress, companyDescription, competitionId, internalClosingDate, externalClosingDate, payLevel, employmentType, travelFrequency, jobCategory, companyName, contactInformation, jobId], (err) => {
+    db.execute(query, [jobTitle, numPeople, jobLocation, streetAddress, jobDescription, competitionId, internalClosingDate, externalClosingDate, payLevel, employmentType, travelFrequency, jobCategory, companyName, contactInformation, jobId], (err) => {
         if (err) {
             console.error('Error updating job:', err.stack);
             return res.status(500).json({ message: 'Error updating job.' });
@@ -364,23 +471,68 @@ app.get('/employers/:employerId/jobs', (req, res) => {
 
 app.get('/profile/:userId', (req, res) => {
     const { userId } = req.params;
-    const query = 'SELECT users.id, users.userType, students.fullName, employers.companyName, admins.adminName FROM users LEFT JOIN students ON users.id = students.user_id LEFT JOIN employers ON users.id = employers.user_id LEFT JOIN admins ON users.id = admins.user_id WHERE users.id = ?';
+    const profileQuery = `
+        SELECT users.email, students.fullName, students.personalStatement, students.skills, students.education, students.experience, 
+               students.resume 
+        FROM users 
+        LEFT JOIN students ON users.id = students.user_id 
+        WHERE users.id = ?
+    `;
 
-    db.execute(query, [userId], (err, results) => {
+    const coursesQuery = `
+        SELECT courseName 
+        FROM courses_taken 
+        WHERE user_id = ?
+    `;
+
+    const jobsAppliedQuery = `
+        SELECT jobTitle, companyName 
+        FROM jobs_applied 
+        WHERE user_id = ?
+    `;
+
+    // Fetch profile information
+    db.execute(profileQuery, [userId], (err, profileResults) => {
         if (err) {
-            console.error('Error fetching profile data: ' + err.stack);
+            console.error('Error fetching profile data:', err.stack);
             res.status(500).send('Error fetching profile data.');
             return;
         }
-        if (results.length > 0) {
-            const { id, userType, fullName, companyName, adminName } = results[0];
-            const name = fullName || companyName || adminName;
-            res.json({ userId: id, userType, name });
-        } else {
+
+        if (profileResults.length === 0) {
             res.status(404).send('User not found.');
+            return;
         }
+        console.log('Profile data fetched:', profileResults[0])
+        const profile = profileResults[0];
+
+        // Fetch courses taken
+        db.execute(coursesQuery, [userId], (err, coursesResults) => {
+            if (err) {
+                console.error('Error fetching courses:', err.stack);
+                res.status(500).send('Error fetching courses.');
+                return;
+            }
+
+            // Fetch jobs applied
+            db.execute(jobsAppliedQuery, [userId], (err, jobsResults) => {
+                if (err) {
+                    console.error('Error fetching jobs applied:', err.stack);
+                    res.status(500).send('Error fetching jobs applied.');
+                    return;
+                }
+
+                res.json({
+                    ...profile,
+                    courses: coursesResults,
+                    jobsApplied: jobsResults
+                });
+            });
+        });
     });
 });
+
+
 
 // Fetch user statistics
 app.get('/admin/user-stats', (req, res) => {

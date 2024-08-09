@@ -29,6 +29,7 @@ import ApplyJobForm from './Components/ApplyJobForm';
 import EmployerList from './Components/EmployerList';
 import EmployerDetails from './Components/EmployerDetails';
 import CourseDetails from './Components/CourseDetails';
+import Profile from './Components/ProfilePage'
 import { UserProvider } from './Components/UserContext';
 import { JobProvider } from './Components/JobContext';
 import './App.css';
@@ -46,6 +47,8 @@ const App = () => {
               <Route path="/student" element={<StudentAuthPage apiUrl={apiUrl} />} />
               <Route path="/admin" element={<AdminAuthPage apiUrl={apiUrl} />} />
               <Route path="/employer" element={<EmployerAuthPage apiUrl={apiUrl} />} />
+              <Route path="/profile/:userId" element={<Profile apiUrl={apiUrl} />} />
+
 
               {/* Student Routes */}
               <Route path="/student-onboarding" element={<StudentOnboarding />} />

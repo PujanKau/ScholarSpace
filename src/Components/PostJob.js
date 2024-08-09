@@ -11,7 +11,7 @@ const PostJob = ({ apiUrl }) => {
   const [numPeople, setNumPeople] = useState('');
   const [jobLocation, setJobLocation] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
-  const [companyDescription, setCompanyDescription] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
   const [competitionId, setCompetitionId] = useState('');
   const [internalClosingDate, setInternalClosingDate] = useState('');
   const [externalClosingDate, setExternalClosingDate] = useState('');
@@ -30,16 +30,20 @@ const PostJob = ({ apiUrl }) => {
   const handleNext = async (e) => {
     e.preventDefault();
 
+    // Convert the date to a more readable format before sending it to the backend
+    const formattedInternalClosingDate = internalClosingDate ? new Date(internalClosingDate).toLocaleDateString('en-CA') : '';
+    const formattedExternalClosingDate = externalClosingDate ? new Date(externalClosingDate).toLocaleDateString('en-CA') : '';
+
     const jobDetails = {
       jobTitle,
       numPeople,
       jobLocation,
       streetAddress,
-      companyDescription,
+      jobDescription,
       userId: user.userId,
       competitionId,
-      internalClosingDate,
-      externalClosingDate,
+      internalClosingDate: formattedInternalClosingDate,
+      externalClosingDate: formattedExternalClosingDate,
       payLevel,
       employmentType,
       travelFrequency,
@@ -129,13 +133,13 @@ const PostJob = ({ apiUrl }) => {
           />
         </div>
         <div className="form-group">
-          <label htmlFor="companyDescription">Company description</label>
+          <label htmlFor="jobDescription">Job description</label>
           <textarea 
-            id="companyDescription" 
-            name="companyDescription" 
+            id="jobDescription" 
+            name="jobDescription" 
             rows="4" 
-            value={companyDescription}
-            onChange={(e) => setCompanyDescription(e.target.value)}
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
           />
         </div>
         <div className="form-group">

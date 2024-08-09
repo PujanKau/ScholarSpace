@@ -1,13 +1,8 @@
 // src/utils/getInitials.js
-export const getInitials = (name) => {
-    if (!name) {
-      return ''; // Return an empty string or some default initials if name is undefined
-    }
-    const nameArray = name.trim().split(' ');
-    if (nameArray.length === 1) {
-      return nameArray[0].charAt(0).toUpperCase();
-    }
-    const initials = nameArray[0].charAt(0) + nameArray[nameArray.length - 1].charAt(0);
-    return initials.toUpperCase();
-  };
+export const getInitials = (fullName) => {
+  if (!fullName) return '';
+  const names = fullName.split(' ');
+  const initials = names.map(name => name[0].toUpperCase()).join('');
+  return initials;
+};
   

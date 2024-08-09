@@ -10,7 +10,7 @@ const EditJob = ({ apiUrl }) => {
     numPeople: '',
     jobLocation: '',
     streetAddress: '',
-    companyDescription: '',
+    jobDescription: '',
     competitionId: '',
     internalClosingDate: '',
     externalClosingDate: '',
@@ -123,11 +123,11 @@ const EditJob = ({ apiUrl }) => {
           />
         </div>
         <div className="form-group">
-          <label htmlFor="companyDescription">Company Description</label>
+          <label htmlFor="jobDescription">Job Description</label>
           <textarea
-            id="companyDescription"
-            name="companyDescription"
-            value={jobDetails.companyDescription}
+            id="jobDescription"
+            name="jobDescription"
+            value={jobDetails.jobDescription}
             onChange={handleChange}
             required
           />
