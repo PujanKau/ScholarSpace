@@ -34,6 +34,7 @@ import { JobProvider } from './Components/JobContext';
 import PrivacyPolicy from './Components/PrivacyPolicy';
 import SavedJobs from './Components/SavedJobs';
 import AppliedJobs from './Components/AppliedJobs';
+import Profile from './Components/Profile';
 import './App.css';
 
 const App = () => {
@@ -61,6 +62,7 @@ const App = () => {
               <Route path="/courses/:courseId" element={<CourseDetails />} />
               <Route path="/saved" element={<SavedJobs apiUrl={apiUrl} />} />
               <Route path="/applied" element={<AppliedJobs apiUrl={apiUrl} />} />
+              <Route path="/profile" element={<Profile apiUrl={apiUrl} />} />
 
               {/* Employer Routes */}
               <Route path="/employer/dashboard" element={<EmployerDashboard apiUrl={apiUrl} />} />
@@ -77,8 +79,8 @@ const App = () => {
               <Route path="/admin/view-courses" element={<ViewCourses />} />
               <Route path="/admin/add-course" element={<AddCourse apiUrl={apiUrl} />} />
               <Route path="/admin/edit-course" element={<EditCourse />} />
-              <Route path="/admin/manage-users" element={<ManageUsers />} />
-              <Route path="/admin/add-user" element={<AddUser />} />
+              <Route path="/admin/manage-users" element={<ManageUsers apiUrl ={apiUrl}/>} />
+              <Route path="/admin/add-user" element={<AddUser apiUrl ={apiUrl} />} />
               <Route path="/admin/view-users" element={<ViewUsers />} />
               <Route path="/admin/edit-user/:userId" element={<EditUser />} />
               <Route path="/admin/reports" element={<Reports />} />

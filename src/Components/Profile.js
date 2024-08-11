@@ -1,177 +1,235 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { UserContext } from './UserContext';
+import React, { useState, useEffect } from 'react';
+import { FaEdit } from 'react-icons/fa';
 import './Profile.css';
 
-const Profile = ({ apiUrl }) => {
-  const { user, setUser } = useContext(UserContext);
-  const navigate = useNavigate();
-  const location = useLocation();
-
+const Profile = ({ userId }) => {
   const [profile, setProfile] = useState({
     name: '',
-    email: '',
     address: '',
     phone: '',
-    resume: null,
-    profilePicture: null,
+    resume: '',
+    fullName: '',
+    studentNumber: '',
   });
 
-  const [profilePicturePreview, setProfilePicturePreview] = useState(null);
-
+  const [isEditing, setIsEditing] = useState({
+    name: false,
+    address: false,
+    phone: false,
+    resume: false,
+    fullName: false,
+    studentNumber: false,
+  });
   useEffect(() => {
-    if (user && user.userId) {
-      axios.get(`${apiUrl}/profile/${user.userId}`)
-        .then(response => {
-          setProfile(response.data);
-          setProfilePicturePreview(response.data.profilePicture || null);
-        })
-        .catch(error => {
-          console.error('Error fetching profile data:', error);
+    
+    console.log('Fetching profile data for user ID:', userId); // Debugging
+    fetch(`/profile/${userId}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile data');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Fetched profile data:', data); // Debugging
+        setProfile({
+          name: data.name || '',
+          address: data.address || '',
+          phone: data.phone || '',
+          resume: data.resume || '',
+          
         });
-    }
-  }, [user, apiUrl]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProfile({ ...profile, [name]: value });
+      })
+      .catch((error) => console.error('Error fetching profile data:', error));
+  }, [userId]);
+  
+  const handleEdit = (field) => {
+    setIsEditing({ ...isEditing, [field]: true });
   };
 
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    setProfile({ ...profile, [name]: files[0] });
+  const handleChange = (field, value) => {
+    setProfile({ ...profile, [field]: value });
   };
 
-  const handleProfilePictureChange = (e) => {
+  const handleSave = () => {
+    // Send updated data to backend
+    fetch(`/profile/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profile),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to save profile');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Profile updated:', data);
+        setIsEditing({
+          name: false,
+          address: false,
+          phone: false,
+          resume: false,
+          fullName: false,
+          studentNumber: false,
+        });
+      })
+      .catch((error) => console.error('Error updating profile:', error));
+  };
+
+  const handleResumeUpload = (e) => {
     const file = e.target.files[0];
-    setProfile({ ...profile, profilePicture: file });
-    setProfilePicturePreview(URL.createObjectURL(file));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!user || !user.userId) {
-      console.error("User ID is not defined.");
-      alert("User is not logged in or user ID is missing.");
-      return;
-    }
-
-    try {
+    if (file) {
       const formData = new FormData();
-      formData.append('userId', user.userId);
-      formData.append('name', profile.name);
-      formData.append('email', profile.email);
-      formData.append('address', profile.address);
-      formData.append('phone', profile.phone);
+      formData.append('resume', file);
 
-      if (profile.profilePicture) {
-        formData.append('profilePicture', profile.profilePicture);
-      }
-      if (profile.resume) {
-        formData.append('resume', profile.resume);
-      }
-
-      const response = await axios.put(`${apiUrl}/profile/${user.userId}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      // Update user context with the new profile data
-      const updatedUser = {
-        ...user,
-        fullName: profile.name,
-        profilePicture: response.data.profilePicture || profile.profilePicturePreview,
-      };
-      setUser(updatedUser);
-
-      // Persist the updated user data in localStorage
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-
-      navigate('/student/dashboard', { state: { message: 'Profile updated successfully!' } });
-
-    } catch (error) {
-      console.error('There was an error updating the profile!', error);
-      alert('Error updating profile. Please try again.');
+      fetch(`/upload-resume/${userId}`, {
+        method: 'POST',
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setProfile({ ...profile, resume: data.resumePath });
+        })
+        .catch((error) => console.error('Error uploading resume:', error));
     }
   };
-
-  const confirmationMessage = location.state?.message;
-
-  if (!user || !user.userId) {
-    return <div>Loading user information...</div>; 
-  }
 
   return (
     <div className="profile-container">
-      {confirmationMessage && (
-        <div className="confirmation-message">
-          <span>{confirmationMessage}</span>
-          <span>✔️</span>
+      <div className="profile-header">
+        <h1>Profile</h1>
+      </div>
+
+      <div className="profile-section">
+        <h2>
+          {isEditing.name ? (
+            <input
+              type="text"
+              value={profile.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+            />
+          ) : (
+            <>
+              {profile.name || 'No name available'}
+              <FaEdit
+                onClick={() => handleEdit('name')}
+                className="edit-icon"
+              />
+            </>
+          )}
+        </h2>
+      </div>
+
+      <div className="profile-section">
+        <h3>Full Name</h3>
+        {isEditing.fullName ? (
+          <input
+            type="text"
+            value={profile.fullName}
+            onChange={(e) => handleChange('fullName', e.target.value)}
+          />
+        ) : (
+          <>
+            <p>{profile.fullName || 'No full name available'}</p>
+            <FaEdit
+              onClick={() => handleEdit('fullName')}
+              className="edit-icon"
+            />
+          </>
+        )}
+      </div>
+
+      <div className="profile-section">
+        <h3>Student Number</h3>
+        {isEditing.studentNumber ? (
+          <input
+            type="text"
+            value={profile.studentNumber}
+            onChange={(e) => handleChange('studentNumber', e.target.value)}
+          />
+        ) : (
+          <>
+            <p>{profile.studentNumber || 'No student number available'}</p>
+            <FaEdit
+              onClick={() => handleEdit('studentNumber')}
+              className="edit-icon"
+            />
+          </>
+        )}
+      </div>
+
+      <div className="profile-section">
+        <h3>Address</h3>
+        {isEditing.address ? (
+          <input
+            type="text"
+            value={profile.address}
+            onChange={(e) => handleChange('address', e.target.value)}
+          />
+        ) : (
+          <>
+            <p>{profile.address || 'No address available'}</p>
+            <FaEdit
+              onClick={() => handleEdit('address')}
+              className="edit-icon"
+            />
+          </>
+        )}
+      </div>
+
+      <div className="profile-section">
+        <h3>Phone</h3>
+        {isEditing.phone ? (
+          <input
+            type="text"
+            value={profile.phone}
+            onChange={(e) => handleChange('phone', e.target.value)}
+          />
+        ) : (
+          <>
+            <p>{profile.phone || 'No phone number available'}</p>
+            <FaEdit
+              onClick={() => handleEdit('phone')}
+              className="edit-icon"
+            />
+          </>
+        )}
+      </div>
+
+      <div className="profile-section">
+        <h3>Resume</h3>
+        {isEditing.resume ? (
+          <input type="file" onChange={handleResumeUpload} />
+        ) : (
+          <>
+            {profile.resume ? (
+              <a href={`/uploads/${profile.resume}`} target="_blank" rel="noopener noreferrer">
+                Download Resume
+              </a>
+            ) : (
+              <p>No resume uploaded.</p>
+            )}
+            <FaEdit
+              onClick={() => handleEdit('resume')}
+              className="edit-icon"
+            />
+          </>
+        )}
+      </div>
+
+      {(isEditing.name || isEditing.fullName || isEditing.studentNumber || isEditing.address || isEditing.phone || isEditing.resume) && (
+        <div className="profile-section">
+          <button className="save-button" onClick={handleSave}>
+            Save
+          </button>
         </div>
       )}
-      <h2>Your Profile</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Profile Picture</label>
-          <input type="file" accept="image/*" onChange={handleProfilePictureChange} />
-          {profilePicturePreview && (
-            <img src={profilePicturePreview} alt="Profile" className="profile-picture-preview" />
-          )}
-        </div>
-        <div className="form-group">
-          <label>Name</label>
-          <input
-            type="text"
-            name="name"
-            value={profile.name}
-            onChange={handleInputChange}
-            readOnly
-          />
-        </div>
-        <div className="form-group">
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={profile.email}
-            onChange={handleInputChange}
-            readOnly
-          />
-        </div>
-        <div className="form-group">
-          <label>Address</label>
-          <input
-            type="text"
-            name="address"
-            value={profile.address}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label>Phone Number</label>
-          <input
-            type="text"
-            name="phone"
-            value={profile.phone}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label>Resume</label>
-          <input
-            type="file"
-            name="resume"
-            accept=".pdf, .doc, .docx"
-            onChange={handleFileChange}
-          />
-        </div>
-        <button type="submit">Update Profile</button>
-      </form>
     </div>
   );
 };
 
-export { Profile };
+export default Profile;
