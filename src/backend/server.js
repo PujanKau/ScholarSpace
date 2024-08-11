@@ -631,6 +631,125 @@ app.get('/admin/active-courses', (req, res) => {
     });
 });
 
+app.get('/users/:userId', (req, res) => {
+    const { userId } = req.params;
+    const query = `
+      SELECT 
+        users.id, 
+        users.email, 
+        users.userType, 
+        students.fullName, 
+        employers.companyName, 
+        admins.adminName 
+      FROM users 
+      LEFT JOIN students ON users.id = students.user_id 
+      LEFT JOIN employers ON users.id = employers.user_id 
+      LEFT JOIN admins ON users.id = admins.user_id 
+      WHERE users.id = ?
+    `;
+  
+    db.query(query, [userId], (err, results) => {
+      if (err) {
+        console.error('Error fetching user data:', err.stack);
+        return res.status(500).json({ message: 'Error fetching user data.' });
+      }
+      if (results.length > 0) {
+        res.json(results[0]);
+      } else {
+        res.status(404).json({ message: 'User not found.' });
+      }
+    });
+  });
+  
+  
+  app.put('/users/:userId', (req, res) => {
+    const { userId } = req.params;
+    const { fullName, email, userType, studentNumber } = req.body;
+    const requestorUserType = req.body.requestorUserType; // Assuming the requestor's user type is sent in the request
+
+    // Check if the requestor is an admin
+    if (requestorUserType !== 'Admin') {
+        return res.status(403).json({ message: 'Only admins can edit other users.' });
+    }
+
+    // Fetch the user being edited to determine their userType
+    const getUserQuery = 'SELECT userType FROM users WHERE id = ?';
+
+    db.query(getUserQuery, [userId], (err, results) => {
+        if (err) {
+            console.error('Error fetching user data:', err.stack);
+            return res.status(500).json({ message: 'Error fetching user data.' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        const targetUserType = results[0].userType;
+
+        // Prevent admins from editing other admins
+        if (targetUserType === 'Admin') {
+            return res.status(403).json({ message: 'Admins cannot edit other admin accounts.' });
+        }
+
+        // Proceed with updating the user
+        const updateUserQuery = 'UPDATE users SET email = ?, userType = ? WHERE id = ?';
+        db.query(updateUserQuery, [email, userType, userId], (err) => {
+            if (err) {
+                console.error('Error updating user data in users table:', err.stack);
+                return res.status(500).json({ message: 'Error updating user data.' });
+            }
+
+            if (userType === 'Student') {
+                const updateStudentQuery = 'UPDATE students SET fullName = ?, studentNumber = ? WHERE user_id = ?';
+                db.query(updateStudentQuery, [fullName, studentNumber, userId], (err) => {
+                    if (err) {
+                        console.error('Error updating student data:', err.stack);
+                        return res.status(500).json({ message: 'Error updating student data.' });
+                    }
+                    res.json({ message: 'Student updated successfully.' });
+                });
+            } else if (userType === 'Employer') {
+                const updateEmployerQuery = 'UPDATE employers SET companyName = ? WHERE user_id = ?';
+                db.query(updateEmployerQuery, [fullName, userId], (err) => {
+                    if (err) {
+                        console.error('Error updating employer data:', err.stack);
+                        return res.status(500).json({ message: 'Error updating employer data.' });
+                    }
+                    res.json({ message: 'Employer updated successfully.' });
+                });
+            } else {
+                res.json({ message: 'User updated successfully.' });
+            }
+        });
+    });
+});
+
+  
+app.get('/users', (req, res) => {
+    const query = `
+      SELECT 
+        users.id, 
+        users.email, 
+        users.userType, 
+        students.fullName, 
+        employers.companyName, 
+        admins.adminName 
+      FROM users 
+      LEFT JOIN students ON users.id = students.user_id 
+      LEFT JOIN employers ON users.id = employers.user_id 
+      LEFT JOIN admins ON users.id = admins.user_id
+    `;
+  
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error('Error fetching users:', err.stack);
+        return res.status(500).json({ message: 'Error fetching users.' });
+      }
+      res.json(results);
+    });
+  });
+
   
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

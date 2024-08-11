@@ -9,7 +9,7 @@ const ManageUsers = () => {
       <div className="user-options">
         <Link to="/admin/view-users" className="user-button">View Users</Link>
         <Link to="/admin/add-user" className="user-button">Add User</Link>
-        <Link to="/admin/edit-user" className="user-button">Edit User</Link>
+        <Link to="/admin/edit-user/:userId" className="user-button">Edit User</Link>
       </div>
     </div>
   );

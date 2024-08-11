@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './ViewUsers.css';
 
 const ViewUsers = ({ apiUrl }) => {
@@ -41,7 +42,13 @@ const ViewUsers = ({ apiUrl }) => {
               <td>{user.fullName || user.companyName || user.adminName}</td>
               <td>{user.email}</td>
               <td>{user.userType}</td>
-              {user.userType === 'Student' && <td>{user.studentNumber}</td>}
+              <td>
+                {user.userType !== 'Admin' && (
+                  <Link to={`/admin/edit-user/${user.id}`}>
+                    <button>Edit</button>
+                  </Link>
+                )}
+                </td>
             </tr>
           ))}
         </tbody>

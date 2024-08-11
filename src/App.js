@@ -81,8 +81,8 @@ const App = () => {
               <Route path="/admin/edit-course" element={<EditCourse />} />
               <Route path="/admin/manage-users" element={<ManageUsers apiUrl ={apiUrl}/>} />
               <Route path="/admin/add-user" element={<AddUser apiUrl ={apiUrl} />} />
-              <Route path="/admin/view-users" element={<ViewUsers />} />
-              <Route path="/admin/edit-user/:userId" element={<EditUser />} />
+              <Route path="/admin/view-users" element={<ViewUsers apiUrl ={apiUrl} />} />
+              <Route path="/admin/edit-user/:userId" element={<EditUser apiUrl ={apiUrl} />} />
               <Route path="/admin/reports" element={<Reports />} />
               <Route path="/admin/settings" element={<Settings />} />
             </Routes>
